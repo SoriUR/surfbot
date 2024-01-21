@@ -12,7 +12,7 @@ func main() {
 	log.Println("Start fetching Kinetika sessions")
 	sessionsMsg, err := kinetika.FetchSessions()
 	if err != nil {
-		log.Panic("Panic fetching Kinetika sessions", err)
+		log.Panic("Panic fetching Kinetika sessions: ", err)
 	}
 
 	log.Println("Sending sessions", *sessionsMsg)
@@ -21,7 +21,7 @@ func main() {
 	log.Println("Start fetching forecast")
 	forecastMsg, err := forecast.FetchForecast()
 	if err != nil {
-		log.Panic("Panic fetching forecast", err)
+		log.Panic("Panic fetching forecast: ", err)
 	}
 
 	log.Println("Sending forecast", *forecastMsg)

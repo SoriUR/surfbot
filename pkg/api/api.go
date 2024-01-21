@@ -7,8 +7,6 @@ import (
 	"net/http"
 )
 
-var client = &http.Client{}
-
 type Request struct {
 	ChatID string `json:"chat_id" example:"5"`
 	Text   string `json:"text"`
@@ -35,6 +33,7 @@ func SendMessage(text string) error {
 
 		req.Header.Set("Content-Type", "application/json")
 
+		var client = &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
 			return err

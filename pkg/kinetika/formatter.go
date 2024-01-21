@@ -1,9 +1,7 @@
 package kinetika
 
 import (
-	"encoding/json"
-	"io"
-	"net/http"
+	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -11,76 +9,20 @@ import (
 )
 
 func FetchSessions() (*string, error) {
+	log.Println("Requesting sessions")
 	sessions, err := requestSessions()
 	if err != nil {
 		return nil, err
 	}
 
+	log.Println("Formatting sessions")
 	text := formatSessions(*sessions)
 	return &text, nil
 }
 
-var client = &http.Client{}
-
 const dateFormat = "2006-01-02T15:04:05.000Z"
 const timeFormat = "15:04"
 const daysCount = 7
-
-type Session struct {
-	ID       int       `json:"id"`
-	Name     string    `json:"sessionName"`
-	Date     time.Time `json:"startsAt"`
-	Link     string    `example:"https://momence.com/s/86299624"`
-	Location string    `example:"Kedungu"`
-	Teacher  string    `example:"Vladi Bagus"`
-	Capacity int       `example:"5"`
-	Booked   int       `json:"ticketsSold" example:"5"`
-}
-
-func requestSessions() (*[]Session, error) {
-	fromDate := time.Now()
-	toDate := fromDate.AddDate(0, 0, daysCount)
-
-	fromDateFormatted := fromDate.UTC().Format(dateFormat)
-	toDateFormatted := toDate.UTC().Format(dateFormat)
-
-	baseUrl := "https://api.momence.com/host-plugins/host/31699/host-schedule/sessions"
-	url := baseUrl + "?" + "fromDate=" + fromDateFormatted + "&" + "toDate=" + toDateFormatted
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	data := struct {
-		Sessions []Session `json:"payload"`
-	}{}
-
-	if err := json.Unmarshal(body, &data); err != nil {
-		return nil, err
-	}
-
-	sessions := data.Sessions
-
-	for i := 0; i < len(sessions); i++ {
-		sessions[i].Date = localDate(sessions[i].Date)
-	}
-
-	return &sessions, nil
-}
 
 func formatSessions(sessions []Session) string {
 	var sessionsByDay = map[string][]Session{}
