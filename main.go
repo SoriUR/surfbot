@@ -4,23 +4,36 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 
+	"u40apps.com/surfbot/pkg/forecast"
 	"u40apps.com/surfbot/pkg/kinetika"
 )
 
 func main() {
-	sessions, err := kinetika.FetchSessions()
+	log.Println("Start fetching Kinetika sessions")
+	sessionsMsg, err := kinetika.FetchSessions()
 	if err != nil {
-		panic(err)
+		log.Panic("Panic fetching Kinetika sessions", err)
 	}
 
-	sendSessions(*sessions)
+	log.Println("Sending sessions", *sessionsMsg)
+	sendMessage(*sessionsMsg)
+
+	log.Println("Start fetching forecast")
+	forecastMsg, err := forecast.FetchForecast()
+	if err != nil {
+		log.Panic("Panic fetching forecast", err)
+	}
+
+	log.Println("Sending forecast", *forecastMsg)
+	sendMessage(*forecastMsg)
 }
 
 var client = &http.Client{}
 
-func sendSessions(text string) error {
+func sendMessage(text string) error {
 
 	data := struct {
 		ChatID string `json:"chat_id" example:"5"`

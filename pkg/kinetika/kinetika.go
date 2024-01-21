@@ -37,6 +37,51 @@ type Session struct {
 	Booked   int       `json:"ticketsSold" example:"5"`
 }
 
+func requestSessions() (*[]Session, error) {
+	fromDate := time.Now()
+	toDate := fromDate.AddDate(0, 0, daysCount)
+
+	fromDateFormatted := fromDate.UTC().Format(dateFormat)
+	toDateFormatted := toDate.UTC().Format(dateFormat)
+
+	baseUrl := "https://api.momence.com/host-plugins/host/31699/host-schedule/sessions"
+	url := baseUrl + "?" + "fromDate=" + fromDateFormatted + "&" + "toDate=" + toDateFormatted
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	data := struct {
+		Sessions []Session `json:"payload"`
+	}{}
+
+	if err := json.Unmarshal(body, &data); err != nil {
+		return nil, err
+	}
+
+	sessions := data.Sessions
+
+	for i := 0; i < len(sessions); i++ {
+		sessions[i].Date = localDate(sessions[i].Date)
+	}
+
+	return &sessions, nil
+}
+
 func formatSessions(sessions []Session) string {
 	var sessionsByDay = map[string][]Session{}
 	var days = []string{}
@@ -50,7 +95,7 @@ func formatSessions(sessions []Session) string {
 		sessionsByDay[formatted] = append(sessionsByDay[formatted], session)
 	}
 
-	var result = ""
+	var result = "Kinetika Schedule:"
 
 	for _, day := range days {
 		sessions := sessionsByDay[day]
@@ -63,10 +108,9 @@ func formatSessions(sessions []Session) string {
 			return sessions[i].Date.Before(sessions[j].Date)
 		})
 
-		if result != "" {
-			result += "\n\n"
-		}
-		result += sessions[0].Date.Weekday().String()
+		dayTime := sessions[0].Date
+		result += "\n\n"
+		result += dayTime.Weekday().String() + " " + dayTime.Format("01.02")
 
 		var sessionsResult = ""
 
@@ -102,50 +146,4 @@ func localDate(date time.Time) time.Time {
 	}
 
 	return date.In(loc)
-}
-
-func requestSessions() (*[]Session, error) {
-	fromDate := time.Now()
-	toDate := fromDate.AddDate(0, 0, daysCount)
-
-	fromDateFormatted := fromDate.UTC().Format(dateFormat)
-	toDateFormatted := toDate.UTC().Format(dateFormat)
-
-	baseUrl := "https://api.momence.com/host-plugins/host/31699/host-schedule/sessions"
-	url := baseUrl + "?" + "fromDate=" + fromDateFormatted + "&" + "toDate=" + toDateFormatted
-
-	// fmt.Println(url)
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	data := struct {
-		Sessions []Session `json:"payload"`
-	}{}
-	if err := json.Unmarshal(body, &data); err != nil {
-		return nil, err
-	}
-
-	sessions := data.Sessions
-
-	for i := 0; i < len(sessions); i++ {
-		sessions[i].Date = localDate(sessions[i].Date)
-	}
-
-	return &sessions, nil
 }
