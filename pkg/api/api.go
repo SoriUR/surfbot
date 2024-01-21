@@ -14,7 +14,10 @@ type Request struct {
 
 func SendMessage(text string) error {
 
-	chatIDs := [2]string{"456464682", "813729"}
+	chatIDs := [2]string{
+		"456464682",
+		"813729",
+	}
 
 	for _, chatID := range chatIDs {
 		data := Request{

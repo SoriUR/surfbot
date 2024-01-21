@@ -1,6 +1,7 @@
 package kinetika
 
 import (
+	"fmt"
 	"log"
 	"sort"
 	"strconv"
@@ -68,13 +69,20 @@ func formatSessions(sessions []Session) string {
 }
 
 func formatSession(session Session) string {
+
+	formatted := "- " + session.Date.Format(timeFormat) + ": "
+
+	locationStr := "📍" + session.Location
+	availabilityStr := "🏄 " + availability(session)
+	teacherStr := "🥸 " + session.Teacher
+
 	elements := []string{
-		"- " + session.Date.Format(timeFormat) + " " + session.Location,
-		availability(session),
-		session.Teacher,
+		fmt.Sprintf("%-12s", locationStr),
+		fmt.Sprintf("%-9s", availabilityStr),
+		fmt.Sprintf("%-10s", teacherStr),
 	}
 
-	return strings.Join(elements, " - ")
+	return formatted + strings.Join(elements, " ")
 }
 
 func availability(session Session) string {

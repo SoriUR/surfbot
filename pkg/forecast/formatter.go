@@ -95,24 +95,29 @@ func formatForecast(forecast Forecast, spotName string, tides tides.Tides) strin
 func formatPeriod(period Period, spline gospline.Spline) string {
 	time := time.Unix(period.Timestamp, 0)
 	formatted := "- " + time.Format("15:04") + ": "
-	tide := fmt.Sprintf("%.2f", spline.At(float64(period.Timestamp))) + " 🌊"
 
-	stars := ""
+	starsStr := ""
 	number, err := strconv.Atoi(period.Stars)
-	if err == nil {
+	if err == nil && number > 0 {
 		for i := 0; i < number; i++ {
-			stars += "⭐️"
+			starsStr += "⭐️"
 		}
+	} else {
+		starsStr = "💩"
 	}
+
+	energyStr := "⚡️" + period.Energy
+	tideStr := "🌊 " + fmt.Sprintf("%.2f", spline.At(float64(period.Timestamp)))
+	windStr := "💨 " + strconv.Itoa(int(period.Wind.Speed)) + " " + period.WindDirection
 
 	elements := []string{
-		period.Energy + "⚡️",
-		tide,
-		strconv.Itoa(int(period.Wind.Speed)) + " " + period.WindDirection + "💨",
-		stars,
+		fmt.Sprintf("%-8s", energyStr),
+		fmt.Sprintf("%-9s", tideStr),
+		fmt.Sprintf("%-15s", windStr),
+		fmt.Sprintf("%-5s", starsStr),
 	}
 
-	return formatted + strings.Join(elements, " / ")
+	return formatted + strings.Join(elements, " ")
 }
 
 func makeSpline(tidesData tides.Tides) gospline.Spline {
