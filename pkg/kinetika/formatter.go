@@ -1,7 +1,6 @@
 package kinetika
 
 import (
-	"fmt"
 	"log"
 	"sort"
 	"strconv"
@@ -70,19 +69,35 @@ func formatSessions(sessions []Session) string {
 
 func formatSession(session Session) string {
 
-	formatted := "- " + session.Date.Format(timeFormat) + ": "
+	difficultyStr := func() string {
+		if strings.Contains(session.Name, "ПЕНА") {
+			return "🌊"
+		} else if strings.Contains(session.Name, "ЛАЙН-АП 1") {
+			return "🐣"
+		} else if strings.Contains(session.Name, "ЛАЙН-АП 2") {
+			return "💪"
+		} else if strings.Contains(session.Name, "ЛАЙН-АП 3") {
+			return "💀"
+		} else if strings.Contains(session.Name, "СЕРФ-ТРИП") {
+			return "✈️"
+		} else if strings.Contains(session.Name, "СОЛО") {
+			return "🎤"
+		}
+		return "❓"
+	}()
+	formatted := "- " + session.Date.Format(timeFormat) + ": " + difficultyStr
 
 	locationStr := "📍" + session.Location
 	availabilityStr := "🏄 " + availability(session)
-	teacherStr := "🥸 " + session.Teacher
+	teacherStr := "🥸 " + strings.Split(session.Teacher, " ")[0]
 
 	elements := []string{
-		fmt.Sprintf("%-12s", locationStr),
-		fmt.Sprintf("%-9s", availabilityStr),
-		fmt.Sprintf("%-10s", teacherStr),
+		locationStr,
+		availabilityStr,
+		teacherStr,
 	}
 
-	return formatted + strings.Join(elements, " ")
+	return formatted + strings.Join(elements, "   ")
 }
 
 func availability(session Session) string {

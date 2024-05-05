@@ -6,6 +6,8 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/joho/godotenv"
+	"u40apps.com/surfbot/pkg/forecast"
+	"u40apps.com/surfbot/pkg/kinetika"
 )
 
 func main() {
@@ -19,7 +21,6 @@ func main() {
 		panic(err)
 	}
 
-	bot.Debug = true
 	updateConfig := tgbotapi.NewUpdate(0)
 	updateConfig.Timeout = 30
 	updates := bot.GetUpdatesChan(updateConfig)
@@ -30,35 +31,50 @@ func main() {
 			continue
 		}
 
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 
-		msg.ReplyToMessageID = update.Message.MessageID
+		if update.Message.IsCommand() {
+			msg.Text = handleCommand(update.Message.Command())
+		} else {
+			msg.Text = "Use commands for interactions"
+		}
 
 		if _, err := bot.Send(msg); err != nil {
-			panic(err)
+			log.Panic(err)
 		}
 	}
+}
 
-	// log.Println("Start fetching Kinetika sessions")
-	// sessionsMsg, err := kinetika.FetchSessions()
-	// if err != nil {
-	// 	log.Panic("Panic fetching Kinetika sessions: ", err)
-	// }
+func handleCommand(command string) string {
+	switch command {
+	case "forecast":
+		return *makeForecastMessage()
 
-	// log.Println("Sending sessions", *sessionsMsg)
-	// api.SendMessage(*sessionsMsg)
+	case "kinetika":
+		return *makeKinetikaMessage()
 
-	// log.Println("Start fetching forecast")
-	// forecastMsg, err := forecast.FetchForecast()
-	// if err != nil {
-	// 	log.Panic("Panic fetching forecast: ", err)
-	// }
+	default:
+		return "I don't know that command"
+	}
+}
 
-	// log.Println("Sending forecast", *forecastMsg)
-	// api.SendMessage(*forecastMsg)
+func makeForecastMessage() *string {
+	log.Println("Start fetching forecast")
+	forecastMsg, err := forecast.FetchForecast()
+	if err != nil {
+		log.Panic("Panic fetching forecast: ", err)
+	}
 
-	// envErr := godotenv.Load()
-	// if envErr != nil {
-	// 	log.Fatal("Error loading .env file")
-	// }
+	log.Println("Sending forecast", *forecastMsg)
+	return forecastMsg
+}
+
+func makeKinetikaMessage() *string {
+	log.Println("Start fetching Kinetika sessions")
+	sessionsMsg, err := kinetika.FetchSessions()
+	if err != nil {
+		log.Panic("Panic fetching Kinetika sessions: ", err)
+	}
+	log.Println("Sending sessions", *sessionsMsg)
+	return sessionsMsg
 }
