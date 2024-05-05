@@ -4,7 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Request struct {
@@ -30,7 +34,14 @@ func SendMessage(text string) error {
 		if err != nil {
 			return err
 		}
-		baseURL := "https://api.telegram.org/bot6407513466:AAE17rRvxcUIjnj9KDh-AAa8q-kOCFBkCRQ"
+
+		envErr := godotenv.Load()
+		if envErr != nil {
+			log.Fatal("Error loading .env file")
+		}
+		token := os.Getenv("API_TOKEN")
+
+		baseURL := "https://api.telegram.org/bot" + token
 		path := "/sendMessage"
 		url := baseURL + path
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
