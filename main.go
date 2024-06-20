@@ -53,6 +53,9 @@ func handleCommand(command string) string {
 	case "kinetika":
 		return *makeKinetikaMessage()
 
+	case "ping":
+		return "pong"
+
 	default:
 		return "I don't know that command"
 	}
