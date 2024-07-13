@@ -12,6 +12,8 @@ import (
 	"u40apps.com/surfbot/pkg/tides"
 )
 
+var location, _ = time.LoadLocation("Asia/Singapore")
+
 func FetchForecast() (*string, error) {
 
 	log.Println("Requesting tides")
@@ -94,21 +96,24 @@ func formatForecast(forecast Forecast, spotName string, tides tides.Tides) strin
 
 func formatPeriod(period Period, spline gospline.Spline) string {
 	time := time.Unix(period.Timestamp, 0)
-	formatted := "- " + time.Format("15:04") + ": "
+	time = time.In(location)
+	formatted := "- " + time.Format("3pm") + ": "
 
-	starsStr := "⭐️ " + period.Stars + "/5"
+	starsStr := "⭐️ " + period.Stars
 	energyStr := "⚡️" + period.Energy
 	tideStr := "🌊 " + fmt.Sprintf("%.2f", spline.At(float64(period.Timestamp)))
 	windStr := "💨 " + strconv.Itoa(int(period.Wind.Speed))
+	swellStr := "⬆️ " + fmt.Sprintf("%.1f", period.Swell.Height)
 
 	elements := []string{
 		energyStr,
 		tideStr,
+		swellStr,
 		windStr,
 		starsStr,
 	}
 
-	return formatted + strings.Join(elements, "   ")
+	return formatted + strings.Join(elements, " ")
 }
 
 func makeSpline(tidesData tides.Tides) gospline.Spline {
@@ -116,11 +121,9 @@ func makeSpline(tidesData tides.Tides) gospline.Spline {
 	xs := []float64{}
 	ys := []float64{}
 
-	loc, _ := time.LoadLocation("Asia/Singapore")
-
 	for _, day := range tidesData.Days {
 		for _, extrema := range day.Extremes {
-			t, err := time.ParseInLocation("2006-01-02T15:04:05", extrema.Time, loc)
+			t, err := time.ParseInLocation("2006-01-02T15:04:05", extrema.Time, location)
 			if err == nil {
 				xs = append(xs, float64(t.Unix()))
 				ys = append(ys, extrema.Extrema())

@@ -10,8 +10,13 @@ type Period struct {
 	Timestamp     int64  `json:"tstampstart_utc"`
 	Wind          Wind
 	WindDirection string `json:"offshoreness"`
+	Swell         Swell  `json:"foreground_swell"`
 }
 
 type Wind struct {
 	Speed float64
+}
+
+type Swell struct {
+	Height float64
 }
