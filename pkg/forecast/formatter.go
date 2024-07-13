@@ -97,13 +97,13 @@ func formatForecast(forecast Forecast, spotName string, tides tides.Tides) strin
 func formatPeriod(period Period, spline gospline.Spline) string {
 	time := time.Unix(period.Timestamp, 0)
 	time = time.In(location)
-	formatted := "- " + time.Format("3pm") + ": "
+	formatted := "- " + time.Format("15:04") + ": \n"
 
 	starsStr := "⭐️ " + period.Stars
 	energyStr := "⚡️" + period.Energy
-	tideStr := "🌊 " + fmt.Sprintf("%.2f", spline.At(float64(period.Timestamp)))
+	tideStr := "📈 " + fmt.Sprintf("%.2f", spline.At(float64(period.Timestamp)))
 	windStr := "💨 " + strconv.Itoa(int(period.Wind.Speed))
-	swellStr := "⬆️ " + fmt.Sprintf("%.1f", period.Swell.Height)
+	swellStr := "🌊 " + fmt.Sprintf("%.1f", period.Swell.Height)
 
 	elements := []string{
 		energyStr,
@@ -113,7 +113,7 @@ func formatPeriod(period Period, spline gospline.Spline) string {
 		starsStr,
 	}
 
-	return formatted + strings.Join(elements, " ")
+	return formatted + strings.Join(elements, "  ")
 }
 
 func makeSpline(tidesData tides.Tides) gospline.Spline {
