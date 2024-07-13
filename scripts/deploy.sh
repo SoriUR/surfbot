@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SESSION_NAME = "surbot"
+
 echo "Killing old session"
 screen -X -S "$SESSION_NAME" quit
 
