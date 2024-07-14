@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SESSION_NAME = "surfbot"
+SESSION_NAME="surfbot"
 
 echo "Killing old session"
 screen -X -S "$SESSION_NAME" quit
