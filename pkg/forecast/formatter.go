@@ -14,15 +14,13 @@ import (
 
 var location, _ = time.LoadLocation("Asia/Singapore")
 
-func FetchForecast() (*string, error) {
+func FetchForecast(spotName string, daysLimit int) (*string, error) {
 
 	log.Println("Requesting tides")
 	tides, err := tides.RequestTides()
 	if err != nil {
 		return nil, err
 	}
-
-	spotName := "Canggu"
 
 	log.Println("Requesting forecast for: ", spotName)
 	response, err := requestForecast(spotName)
@@ -31,14 +29,14 @@ func FetchForecast() (*string, error) {
 	}
 
 	log.Println("Formatting forecast: ")
-	text := formatForecast(*response, spotName, *tides)
+	text := formatForecast(*response, daysLimit, spotName, *tides)
 	return &text, nil
 }
 
-func groupPeriods(forecast Forecast) (map[string][]Period, []string) {
+func groupPeriods(forecast Forecast, daysLimit int) (map[string][]Period, []string) {
 	var periodsByDay = map[string][]Period{}
 	var days = []string{}
-	var endDate = time.Now().AddDate(0, 0, 5).Unix()
+	var endDate = time.Now().AddDate(0, 0, daysLimit).Unix()
 
 	for _, period := range forecast.Periods {
 		if period.Timestamp > endDate {
@@ -56,9 +54,9 @@ func groupPeriods(forecast Forecast) (map[string][]Period, []string) {
 	return periodsByDay, days
 }
 
-func formatForecast(forecast Forecast, spotName string, tides tides.Tides) string {
+func formatForecast(forecast Forecast, daysLmit int, spotName string, tides tides.Tides) string {
 
-	periodsByDay, days := groupPeriods(forecast)
+	periodsByDay, days := groupPeriods(forecast, daysLmit)
 	spline := makeSpline(tides)
 
 	var result = spotName + " Forecast:"
