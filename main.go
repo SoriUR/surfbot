@@ -108,7 +108,7 @@ Tuesday 01.14
 - 08:00: 
 ⚡️908  📈 0.66  🌊 1.5  💨 10  ⭐️ 2
 
-## How to read
+How to read:
 ⚡️ - Energy (kilo Joules)
 📈 - Tide level (meters)
 🌊 - Wave height (meters)
@@ -118,9 +118,9 @@ Tuesday 01.14
 ` + helpMessage
 
 const helpMessage = `
-## How to use
-1) Choose a spot. Available spots can be found at https://www.surf-forecast.com/countries.
-2) Send me one of this commands:
+How to use:
+1. Choose a spot. Available spots can be found at https://www.surf-forecast.com/countries.
+2. Send me one of this commands:
 
 - /<spot_name> - Forecast at the spot for 5 days.
 Example: /uluwatu, /airport_lefts
