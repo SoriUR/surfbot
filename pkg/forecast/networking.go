@@ -9,6 +9,8 @@ import (
 
 func requestForecast(spotName string) (*Forecast, error) {
 
+	log.Printf("Requesting forecast for %v", spotName)
+
 	baseUrl := "https://api.surf-forecast.com/s1/breaks/"
 	url := baseUrl + spotName + "/forecast"
 

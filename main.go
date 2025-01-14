@@ -8,23 +8,15 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
-	"go.mongodb.org/mongo-driver/mongo"
-
 	"u40apps.com/surfbot/pkg/forecast"
 	"u40apps.com/surfbot/pkg/setup"
 )
 
-var chatsCollection *mongo.Collection
-
 func main() {
 
-	apiToken := setup.ReadEnv("API_TOKEN")
-	setup.SetupBot(apiToken)
-
+	setup.SetupBot(setup.ApiToken())
 	setup.SetupDB("surf_bot")
-	collection, _ := setup.SetupCollection("chats")
-
-	chatsCollection = collection
+	defer setup.DisconnectDB()
 
 	handleUpdates()
 }
@@ -67,26 +59,12 @@ func handleCommand(update tgbotapi.Update) {
 	switch command {
 	case "/start":
 		buttons := map[string]string{
-			"Try for Uluwatu": "try_uluwatu",
+			"Check Uluwatu forecast": "try_uluwatu",
 		}
 		sendMsgButtons(chatID, startMessage, buttons)
 
 	case "/help":
 		sendMsg(chatID, helpMessage)
-
-	case "/forecast":
-		if len(args) < 3 {
-			sendMsg(chatID, "Invalid arguments. Provide spot name and days limit. Example: /forecast Uluwatu 2")
-			return
-		}
-		spotName := args[1]
-		daysLimit, err := strconv.Atoi(args[2])
-		if err != nil || daysLimit < 1 || daysLimit > 7 {
-			sendMsg(chatID, "Invalid days limit. Should be between 1 and 7")
-			return
-		}
-
-		handleForecastCommand(chatID, spotName, daysLimit)
 
 	case "/ping":
 		sendMsg(chatID, "pong")
@@ -97,7 +75,7 @@ func handleCommand(update tgbotapi.Update) {
 			sendMsg(chatID, "Unknown command. See available commands by typing /help")
 			return
 		}
-		log.Printf("Successfullt parsed command. Spot: %v. Days %v", spotName, daysLimit)
+		log.Printf("Successfully parsed command. Spot: %v. Days: %v", spotName, daysLimit)
 		handleForecastCommand(chatID, spotName, daysLimit)
 	}
 }
@@ -105,15 +83,15 @@ func handleCommand(update tgbotapi.Update) {
 func handleForecastCommand(chatID int64, spotName string, daysLimit int) {
 	forecast, err := makeForecastMessage(spotName, daysLimit)
 	if err != nil {
-		sendMsg(chatID, "Sorry. Unable to retrive forecase. Try later")
+		sendMsg(chatID, "Sorry. Unable to get forecast. Try later")
 	} else {
 		sendMsg(chatID, *forecast)
 	}
 }
 
 func makeForecastMessage(spotName string, daysLimit int) (*string, error) {
-	log.Printf("Start fetching forecast. Spot: %v. Days %v", spotName, daysLimit)
-	forecastMsg, err := forecast.FetchForecast(spotName, daysLimit)
+	log.Printf("Start fetching forecast. Spot: %v. Days: %v", spotName, daysLimit)
+	forecastMsg, err := forecast.GetForecast(spotName, daysLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -125,39 +103,30 @@ func makeForecastMessage(spotName string, daysLimit int) (*string, error) {
 const startMessage = `
 Hi, I am Surf Forecast Bot. I will help you to get the surf forecast at your favourite spot!
 
-How to read:
+Example
+Tuesday 01.14
+- 08:00: 
+⚡️908  📈 0.66  🌊 1.5  💨 10  ⭐️ 2
+
+## How to read
 ⚡️ - Energy (kilo Joules)
 📈 - Tide level (meters)
-🌊 - Wave heght (meters)
+🌊 - Wave height (meters)
 💨 - Wind (km/h)
 ⭐️ - Rating (10 - max)
 
-Available commands:
-1) /forecast - Forecast at any spot for number of days. 
-Example: "/forecast Uluwatu 1"
-
-2) /<spot_name> - Forecast at the spot for 3 days.
-Example: "/uluwatu", "/airport_lefts"
-
-3) /<spot_name>_<days_limit> - Forecast at the spot for number of days.
-Example: "/uluwatu_1", "/airport_lefts_5"
-
-You can find spot names at:
-https://www.surf-forecast.com/countries
-`
+` + helpMessage
 
 const helpMessage = `
-1) /forecast - Forecast at any spot for number of days. 
-Example: /forecast Uluwatu 1
+## How to use
+1) Choose a spot. Available spots can be found at https://www.surf-forecast.com/countries.
+2) Send me one of this commands:
 
-2) /<spot_name> - Forecast at the spot for 3 days.
+- /<spot_name> - Forecast at the spot for 5 days.
 Example: /uluwatu, /airport_lefts
 
-3) /<spot_name>_<days_limit> - Forecast at the spot for number of days.
+- /<spot_name>_<days_limit> - Forecast at the spot for number of days.
 Example: /uluwatu_1, /airport_lefts_5
-
-You can find spot names at:
-https://www.surf-forecast.com/countries
 `
 
 func sendMsg(chatID int64, message string) {
@@ -198,16 +167,11 @@ func handleCallback(update tgbotapi.Update) {
 }
 
 func splitCommand(command string) (string, int, error) {
-	log.Printf("1 command %v", command)
 	if len(command) > 0 && command[0] == '/' {
 		command = command[1:]
 	}
 
-	log.Printf("2 command %v", command)
-
 	parts := strings.Split(command, "_")
-
-	log.Printf("3 parts %v", parts)
 
 	if len(parts) == 0 {
 		return "", 0, fmt.Errorf("input string is invalid")
@@ -216,14 +180,10 @@ func splitCommand(command string) (string, int, error) {
 	lastPart := parts[len(parts)-1]
 	number, err := strconv.Atoi(lastPart)
 	if err != nil {
-		number = 3
+		number = 5
 	} else {
 		parts = parts[:len(parts)-1]
 	}
-
-	log.Printf("4 number %v", number)
-
-	log.Printf("5 restParts %v", parts)
 
 	for i, part := range parts {
 		if len(part) > 0 {

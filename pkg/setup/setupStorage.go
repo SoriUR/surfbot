@@ -10,10 +10,12 @@ import (
 )
 
 var db *mongo.Database
+var client *mongo.Client
 
 func SetupDB(name string) error {
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	client, err := mongo.Connect(context.TODO(), clientOptions)
+	dbClient, err := mongo.Connect(context.TODO(), clientOptions)
+	client = dbClient
 	if err != nil {
 		return err
 	}
@@ -32,7 +34,11 @@ func SetupDB(name string) error {
 	return nil
 }
 
-func SetupCollection(name string) (*mongo.Collection, error) {
+func DisconnectDB() {
+	client.Disconnect(context.TODO())
+}
+
+func GetCollection(name string) (*mongo.Collection, error) {
 	if db == nil {
 		return nil, fmt.Errorf("DataBase is not configured. Call SetupDB() first")
 	}
