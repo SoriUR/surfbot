@@ -41,7 +41,7 @@ func formatForecast(forecast Forecast, daysLimit int) string {
 
 		dayTime := time.Unix(periods[0].Timestamp, 0)
 		result += "\n\n"
-		result += dayTime.Weekday().String() + " " + dayTime.Format("01.02")
+		result += dayTime.Weekday().String() + " " + dayTime.Format("02.01")
 
 		var periodsResult = ""
 

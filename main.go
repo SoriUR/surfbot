@@ -122,7 +122,7 @@ How to use:
 1. Choose a spot. Available spots can be found at https://www.surf-forecast.com/countries.
 2. Send me one of this commands:
 
-- /<spot_name> - Forecast at the spot for 5 days.
+- /<spot_name> - Forecast at the spot for 2 days.
 Example: /uluwatu, /airport_lefts
 
 - /<spot_name>_<days_limit> - Forecast at the spot for number of days.
@@ -180,7 +180,7 @@ func splitCommand(command string) (string, int, error) {
 	lastPart := parts[len(parts)-1]
 	number, err := strconv.Atoi(lastPart)
 	if err != nil {
-		number = 5
+		number = 2
 	} else {
 		parts = parts[:len(parts)-1]
 	}
