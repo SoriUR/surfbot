@@ -3,6 +3,7 @@ package forecast
 import (
 	// "context"
 	"log"
+	"strconv"
 
 	// "go.mongodb.org/mongo-driver/bson"
 	// "go.mongodb.org/mongo-driver/mongo"
@@ -25,7 +26,7 @@ func GetForecast(spotName string, daysLimit int) (*string, error) {
 	log.Println("Formatting forecast: ")
 	formattedForecast := formatForecast(*response, daysLimit)
 
-	var result = "Forecast at " + spotName + ":" + formattedForecast
+	var result = "Forecast at " + spotName + " for " + strconv.Itoa(daysLimit) + " days:" + formattedForecast
 
 	return &result, nil
 }
