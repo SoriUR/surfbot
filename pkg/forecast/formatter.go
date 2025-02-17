@@ -9,11 +9,13 @@ import (
 )
 
 func formatForecast(forecast Forecast, daysLimit int) string {
+
 	periodsByDate := make(map[string][]Period)
 	datesOrder := []string{}
 
 	location := calculateLocation(forecast.Periods[0])
 	if location == nil {
+		fmt.Println("Forecast Location is unknown")
 		location = time.Now().Location()
 	}
 	fmt.Printf("Forecast Location %v", location)
@@ -72,11 +74,9 @@ func calculateLocation(period Period) *time.Location {
 	}
 
 	utcTime := time.Unix(period.Timestamp, 0).UTC()
-
 	offset := int(localTime.Sub(utcTime).Hours())
 
-	loc, _ := time.LoadLocation(fmt.Sprintf("GMT%+d", offset))
-	return loc
+	return time.FixedZone("", offset*60*60)
 }
 
 func formatPeriod(period Period) string {

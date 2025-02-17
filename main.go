@@ -83,7 +83,7 @@ func handleCommand(update tgbotapi.Update) {
 func handleForecastCommand(chatID int64, spotName string, daysLimit int) {
 	forecast, err := makeForecastMessage(spotName, daysLimit)
 	if err != nil {
-		sendMsg(chatID, "Sorry. Unable to get forecast. Try later")
+		sendMsg(chatID, "Sorry. Unable to get forecast.\nCheck correctness of the spot name or try again later")
 	} else {
 		sendMsg(chatID, *forecast)
 	}

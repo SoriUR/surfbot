@@ -2,12 +2,11 @@ package forecast
 
 import (
 	// "context"
+	"fmt"
 	"log"
 	"strconv"
-
 	// "go.mongodb.org/mongo-driver/bson"
 	// "go.mongodb.org/mongo-driver/mongo"
-
 	// "u40apps.com/surfbot/pkg/setup"
 )
 
@@ -21,6 +20,10 @@ func GetForecast(spotName string, daysLimit int) (*string, error) {
 	response, err := getForecast(spotName)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(response.Periods) <= 0 {
+		return nil, fmt.Errorf("empty periods")
 	}
 
 	log.Println("Formatting forecast: ")
