@@ -9,27 +9,34 @@ import (
 )
 
 func formatForecast(forecast Forecast, daysLimit int) string {
-	grouped := make(map[string][]Period)
-	order := []string{}
+	periodsByDate := make(map[string][]Period)
+	datesOrder := []string{}
+
+	location := calculateLocation(forecast.Periods[0])
+	if location == nil {
+		location = time.Now().Location()
+	}
+	fmt.Printf("Forecast Location %v", location)
+
 	var result = ""
 
 	for _, period := range forecast.Periods {
 
-		date := strings.Split(period.Localtime, " ")[0]
+		localDate := strings.Split(period.Localtime, " ")[0]
 
-		if _, exists := grouped[date]; !exists {
-			order = append(order, date)
+		if _, exists := periodsByDate[localDate]; !exists {
+			datesOrder = append(datesOrder, localDate)
 		}
 
-		grouped[date] = append(grouped[date], period)
+		periodsByDate[localDate] = append(periodsByDate[localDate], period)
 	}
 
-	for i, day := range order {
+	for i, day := range datesOrder {
 		if i >= daysLimit {
 			break
 		}
 
-		periods := grouped[day]
+		periods := periodsByDate[day]
 		if len(periods) == 0 {
 			continue
 		}
@@ -39,7 +46,7 @@ func formatForecast(forecast Forecast, daysLimit int) string {
 			return ti.Before(tj)
 		})
 
-		dayTime := time.Unix(periods[0].Timestamp, 0)
+		dayTime := time.Unix(periods[0].Timestamp, 0).In(location)
 		result += "\n\n"
 		result += dayTime.Weekday().String() + " " + dayTime.Format("02.01")
 
@@ -55,6 +62,21 @@ func formatForecast(forecast Forecast, daysLimit int) string {
 	}
 
 	return result
+}
+
+func calculateLocation(period Period) *time.Location {
+
+	localTime, err := time.Parse("2006-01-02 15:04:05", period.Localtime)
+	if err != nil {
+		return nil
+	}
+
+	utcTime := time.Unix(period.Timestamp, 0).UTC()
+
+	offset := int(localTime.Sub(utcTime).Hours())
+
+	loc, _ := time.LoadLocation(fmt.Sprintf("GMT%+d", offset))
+	return loc
 }
 
 func formatPeriod(period Period) string {

@@ -9,12 +9,8 @@ import (
 
 func requestForecast(spotName string) (*Forecast, error) {
 
-	log.Printf("Requesting forecast for %v", spotName)
-
 	baseUrl := "https://api.surf-forecast.com/s1/breaks/"
 	url := baseUrl + spotName + "/forecast"
-
-	log.Println("url: ", url)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -24,6 +20,10 @@ func requestForecast(spotName string) (*Forecast, error) {
 	req.Header.Set("accept", "application/json")
 	req.Header.Set("Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX3Rva2VuIjoiLUJtLXktU2YzSEFJTjBJOSIsImV4cCI6MjAyMTIxNTgxNn0.hvaU3rW8ja5vT_hA6gAAfApHBpoW2sPJVx8IsHOtn-o")
 	req.Header.Set("x-surf-app-key", "8UMANwMz.aFM4z9nk*DGAd")
+
+	log.Printf("Requesting forecast for %v", spotName)
+	log.Println("url: ", url)
+	log.Println("headers: ", req.Header)
 
 	var client = &http.Client{}
 	resp, err := client.Do(req)
