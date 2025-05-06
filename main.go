@@ -8,6 +8,7 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
+	"u40apps.com/surfbot/pkg/analytics"
 	"u40apps.com/surfbot/pkg/forecast"
 	"u40apps.com/surfbot/pkg/setup"
 )
@@ -49,6 +50,7 @@ func handleUpdates() {
 }
 
 func handleCommand(update tgbotapi.Update) {
+	userID := update.Message.From.UserName
 	chatID := update.Message.Chat.ID
 
 	args := strings.Fields(update.Message.Text)
@@ -62,6 +64,7 @@ func handleCommand(update tgbotapi.Update) {
 			"Check Uluwatu forecast": "try_uluwatu",
 		}
 		sendMsgButtons(chatID, startMessage, buttons)
+		analytics.LogEvent("Start Command Called", userID, nil)
 
 	case "/help":
 		sendMsg(chatID, helpMessage)
@@ -73,9 +76,22 @@ func handleCommand(update tgbotapi.Update) {
 		spotName, daysLimit, err := splitCommand(command)
 		if err != nil {
 			sendMsg(chatID, "Unknown command. See available commands by typing /help")
+
+			props := map[string]interface{}{
+				"command": command,
+			}
+			analytics.LogEvent("Forecast Command Error", userID, props)
+
 			return
 		}
 		log.Printf("Successfully parsed command. Spot: %v. Days: %v", spotName, daysLimit)
+
+		props := map[string]interface{}{
+			"spot": spotName,
+			"days": daysLimit,
+		}
+		analytics.LogEvent("Forecast Command Success", userID, props)
+
 		handleForecastCommand(chatID, spotName, daysLimit)
 	}
 }
