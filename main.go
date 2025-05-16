@@ -94,7 +94,12 @@ func handleCommand(update tgbotapi.Update) {
 		}
 		analytics.LogEvent("Forecast Command Success", userID, props)
 
-		handleForecastCommand(chatID, spotName, daysLimit)
+		buttons := map[string]string{
+			"3 days":  fmt.Sprintf("forecast_%s_3", spotName),
+			"7 days":  fmt.Sprintf("forecast_%s_7", spotName),
+			"14 days": fmt.Sprintf("forecast_%s_14", spotName),
+		}
+		sendMsgButtons(chatID, "Choose forecast range:", buttons)
 	}
 }
 
@@ -180,6 +185,17 @@ func handleCallback(update tgbotapi.Update) {
 		handleForecastCommand(chatID, "Uluwatu", 3)
 
 	default:
+		if strings.HasPrefix(callback.Data, "forecast_") {
+			parts := strings.Split(callback.Data, "_")
+			if len(parts) == 3 {
+				spot := parts[1]
+				days, err := strconv.Atoi(parts[2])
+				if err == nil {
+					handleForecastCommand(chatID, spot, days)
+					return
+				}
+			}
+		}
 		return
 	}
 }
