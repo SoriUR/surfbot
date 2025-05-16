@@ -95,6 +95,7 @@ func handleCommand(update tgbotapi.Update) {
 		analytics.LogEvent("Forecast Command Success", userID, props)
 
 		buttons := map[string]string{
+			"1 day":   fmt.Sprintf("forecast_%s_1", spotName),
 			"3 days":  fmt.Sprintf("forecast_%s_3", spotName),
 			"7 days":  fmt.Sprintf("forecast_%s_7", spotName),
 			"14 days": fmt.Sprintf("forecast_%s_14", spotName),
