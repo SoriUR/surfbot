@@ -99,7 +99,7 @@ func handleCommand(update tgbotapi.Update) {
 			"7 days":  fmt.Sprintf("forecast_%s_7", spotName),
 			"14 days": fmt.Sprintf("forecast_%s_14", spotName),
 		}
-		sendMsgButtons(chatID, "Choose forecast range:", buttons)
+		sendMsgButtons(chatID, fmt.Sprintf("Choose forecast range for %s:", spotName), buttons)
 	}
 }
 
