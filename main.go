@@ -62,8 +62,8 @@ func handleCommand(update tgbotapi.Update) {
 
 	switch command {
 	case "/start":
-		buttons := map[string]string{
-			"Check Uluwatu forecast": "try_uluwatu",
+		buttons := []Button{
+			{"Check Uluwatu forecast", "try_uluwatu"},
 		}
 		sendMsgButtons(chatID, startMessage, buttons)
 		analytics.LogEvent("Start Command Called", userID, nil)
@@ -75,7 +75,7 @@ func handleCommand(update tgbotapi.Update) {
 		sendMsg(chatID, "pong")
 
 	default:
-		spotName, daysLimit, err := splitCommand(command)
+		spotName, daysLimit, explicitDays, err := splitCommand(command)
 		if err != nil {
 			sendMsg(chatID, "Unknown command. See available commands by typing /help")
 
@@ -94,11 +94,16 @@ func handleCommand(update tgbotapi.Update) {
 		}
 		analytics.LogEvent("Forecast Command Success", userID, props)
 
-		buttons := map[string]string{
-			"1 day":   fmt.Sprintf("forecast_%s_1", spotName),
-			"3 days":  fmt.Sprintf("forecast_%s_3", spotName),
-			"7 days":  fmt.Sprintf("forecast_%s_7", spotName),
-			"14 days": fmt.Sprintf("forecast_%s_14", spotName),
+		if explicitDays {
+			handleForecastCommand(chatID, spotName, daysLimit)
+			return
+		}
+
+		buttons := []Button{
+			{"1 day", fmt.Sprintf("forecast_%s_1", spotName)},
+			{"3 days", fmt.Sprintf("forecast_%s_3", spotName)},
+			{"7 days", fmt.Sprintf("forecast_%s_7", spotName)},
+			{"14 days", fmt.Sprintf("forecast_%s_14", spotName)},
 		}
 		sendMsgButtons(chatID, fmt.Sprintf("Choose forecast range for %s:", spotName), buttons)
 	}
@@ -153,20 +158,25 @@ Example: /uluwatu, /airport_lefts
 Example: /uluwatu_1, /airport_lefts_5
 `
 
-func sendMsg(chatID int64, message string) {
-	sendMsgButtons(chatID, message, map[string]string{})
+type Button struct {
+	Text     string
+	Callback string
 }
 
-func sendMsgButtons(chatID int64, message string, buttonsMap map[string]string) {
+func sendMsg(chatID int64, message string) {
+	sendMsgButtons(chatID, message, []Button{})
+}
+
+func sendMsgButtons(chatID int64, message string, buttonsList []Button) {
 	msg := tgbotapi.NewMessage(chatID, "")
 
 	msg.Text = message
-	if len(buttonsMap) != 0 {
+	if len(buttonsList) != 0 {
 		var buttons [][]tgbotapi.InlineKeyboardButton
-		for text, callbackData := range buttonsMap {
+		for _, btn := range buttonsList {
 
 			buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonData(text, callbackData),
+				tgbotapi.NewInlineKeyboardButtonData(btn.Text, btn.Callback),
 			))
 		}
 		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(buttons...)
@@ -201,7 +211,7 @@ func handleCallback(update tgbotapi.Update) {
 	}
 }
 
-func splitCommand(command string) (string, int, error) {
+func splitCommand(command string) (string, int, bool, error) {
 	if len(command) > 0 && command[0] == '/' {
 		command = command[1:]
 	}
@@ -209,15 +219,16 @@ func splitCommand(command string) (string, int, error) {
 	parts := strings.Split(command, "_")
 
 	if len(parts) == 0 {
-		return "", 0, fmt.Errorf("input string is invalid")
+		return "", 0, false, fmt.Errorf("input string is invalid")
 	}
 
 	lastPart := parts[len(parts)-1]
 	number, err := strconv.Atoi(lastPart)
-	if err != nil {
-		number = 3
-	} else {
+	explicitDays := err == nil
+	if explicitDays {
 		parts = parts[:len(parts)-1]
+	} else {
+		number = 3
 	}
 
 	for i, part := range parts {
@@ -227,5 +238,5 @@ func splitCommand(command string) (string, int, error) {
 	}
 	restString := strings.Join(parts, "-")
 
-	return restString, number, nil
+	return restString, number, explicitDays, nil
 }
