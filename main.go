@@ -29,25 +29,25 @@ func handleUpdates() {
 	bot := setup.Bot
 	updates := bot.GetUpdatesChan(updateConfig)
 
-	
 	for update := range updates {
 		if update.CallbackQuery != nil {
-		callback := tgbotapi.NewCallback(update.CallbackQuery.ID, "")
-		callback.ShowAlert = false
-		bot.Request(callback)
+			callback := tgbotapi.NewCallback(update.CallbackQuery.ID, "")
+			callback.ShowAlert = false
+			bot.Request(callback)
 
-		handleCallback(update)
-		continue
-	}
+			handleCallback(update)
+			continue
+		}
 
-	if update.Message != nil && update.Message.IsCommand() {
-		handleCommand(update)
-		continue
-	}
+		if update.Message != nil && update.Message.IsCommand() {
+			handleCommand(update)
+			continue
+		}
 
-	if update.Message != nil {
-		chatID := update.Message.Chat.ID
-		sendMsg(chatID, "Only commands are supported. See available commands by typing /help")
+		if update.Message != nil {
+			chatID := update.Message.Chat.ID
+			sendMsg(chatID, "Only commands are supported. See available commands by typing /help")
+		}
 	}
 }
 
