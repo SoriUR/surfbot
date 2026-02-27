@@ -10,8 +10,6 @@ import (
 
 const amplitudeAPIURL = "https://api2.amplitude.com/2/httpapi"
 
-var apiKey = os.Getenv("AMPLITUDE_API_KEY")
-
 type AmplitudeEvent struct {
 	UserID     string                 `json:"user_id"`
 	EventType  string                 `json:"event_type"`
@@ -24,7 +22,11 @@ type AmplitudePayload struct {
 }
 
 func LogEvent(eventType string, userID string, props map[string]interface{}) {
-	var apiKey = os.Getenv("AMPLITUDE_API_KEY")
+	apiKey := os.Getenv("AMPLITUDE_API_KEY")
+	if apiKey == "" {
+		log.Printf("AMPLITUDE_API_KEY not set, skipping event: %s", eventType)
+		return
+	}
 
 	event := AmplitudeEvent{
 		UserID:     userID,
@@ -46,7 +48,6 @@ func LogEvent(eventType string, userID string, props map[string]interface{}) {
 	log.Printf("Sending Amplitude Event: %v", payload)
 
 	req, err := http.NewRequest("POST", amplitudeAPIURL, bytes.NewBuffer(body))
-
 	if err != nil {
 		log.Printf("Amplitude Create Req Error: %v", err)
 		return
@@ -57,7 +58,6 @@ func LogEvent(eventType string, userID string, props map[string]interface{}) {
 
 	var client = &http.Client{}
 	resp, err := client.Do(req)
-
 	if err != nil {
 		log.Printf("Amplitude POST error: %v", err)
 		return
